@@ -35,28 +35,28 @@
 //     }
 // };
 
-module.exports = {
-	sets: {
-		desktop: {
-			files: 'test/testplane',
-		},
-	},
+// module.exports = {
+// 	sets: {
+// 		desktop: {
+// 			files: 'test/testplane',
+// 		},
+// 	},
 
-	browsers: {
-		chrome: {
-			automationProtocol: 'devtools',
-			desiredCapabilities: {
-				browserName: 'chrome',
-			},
-		},
-	},
+// 	browsers: {
+// 		chrome: {
+// 			automationProtocol: 'devtools',
+// 			desiredCapabilities: {
+// 				browserName: 'chrome',
+// 			},
+// 		},
+// 	},
 
-	plugins: {
-		'html-reporter/testplane': {
-			enabled: true,
-		},
-	},
-}
+// 	plugins: {
+// 		'html-reporter/testplane': {
+// 			enabled: true,
+// 		},
+// 	},
+// }
 
 export default {
 	gridUrl: 'http://localhost:4444/wd/hub',

@@ -1,41 +1,47 @@
-describe('Тест Catalog', () => {
+import { clearCart } from './clearCart'
+import { mockRequest } from './mockApi'
+
+describe('Тест Catalog:', () => {
+	beforeEach(async ({ browser }) => {
+		await clearCart(browser)
+	})
+
 	it('на странице отображаются товары, список которых приходит с сервера', async ({
 		browser,
 	}) => {
-		await browser.url('http://localhost:3000/hw/store/catalog')
+		const puppeteer = await browser.getPuppeteer()
+		const [page] = await puppeteer.pages()
+		await page.setRequestInterception(true)
+		page.on('request', mockRequest)
 
-		const items = await Promise.all(await browser.$$('.ProductItem'))
+		await page.goto('http://localhost:3000/hw/store/catalog')
+		const items = await Promise.all(await page.$$('.ProductItem'))
 
-		await expect(items.length).toBeGreaterThan(0)
+		expect(items.length).toBeGreaterThan(0)
 	})
 
 	it('у каждого товара есть название, цена и ссылка на его страницу', async ({
 		browser,
 	}) => {
-		await browser.url('http://localhost:3000/hw/store/catalog')
-		const namePromises = await browser
-			.$$('.ProductItem')
-			.map(item => item.$('.ProductItem-Name').getText())
-		const pricePRomises = await browser
-			.$$('.ProductItem')
-			.map(item => item.$('.ProductItem-Price').getText())
-		const detailsLinkPromises = await browser
-			.$$('.ProductItem')
-			.map(item => item.$('.ProductItem-DetailsLink').getText())
+		const puppeteer = await browser.getPuppeteer()
+		const [page] = await puppeteer.pages()
+		await page.setRequestInterception(true)
+		page.on('request', mockRequest)
 
-		const names = await Promise.all(namePromises)
-		const prices = await Promise.all(pricePRomises)
-		const detailsLinks = await Promise.all(detailsLinkPromises)
+		await page.goto('http://localhost:3000/hw/store/catalog')
 
-		expect(names).toEqual(expect.arrayContaining(names.filter(Boolean)))
-		expect(prices).toEqual(expect.arrayContaining(prices.filter(Boolean)))
-		expect(detailsLinks).toEqual(
-			expect.arrayContaining(detailsLinks.filter(Boolean))
+		const names = await page.$$('.ProductItem-Name')
+		const prices = await page.$$('.ProductItem-Price')
+		const links = await page.$$('.ProductItem-DetailsLink')
+
+		expect(names.length).toBeGreaterThan(0)
+		expect(prices.length).toBeGreaterThan(0)
+		expect(links.length).toBeGreaterThan(0)
+
+		const link = await page.evaluate(() =>
+			document.querySelector('.ProductItem-DetailsLink').getAttribute('href')
 		)
-
-		detailsLinks.forEach(link => {
-			expect(link).toMatch('Details')
-		})
+		expect(link).toBe('/hw/store/catalog/0')
 	})
 
 	it('на странице товара отображается название, описание, цена, цвет, материал и кнопка "добавить в корзину"', async ({
@@ -81,19 +87,30 @@ describe('Тест Catalog', () => {
 	it('если товар уже в корзине, то повторное нажатие кнопки "добавить в корзину" должно увеличить его количество', async ({
 		browser,
 	}) => {
+		// const puppeteer = await browser.getPuppeteer()
+		// const [page] = await puppeteer.pages()
+
 		await browser.url('http://localhost:3000/hw/store/catalog/6')
+		// await page.goto('http://localhost:3000/hw/store/catalog/6')
+
 		const addToCartButton = await browser.$('.ProductDetails-AddToCart')
 		await addToCartButton.click()
 
 		await browser.url('http://localhost:3000/hw/store/cart')
+		// await page.goto('http://localhost:3000/hw/store/cart')
+
 		const cartCountElement = await browser.$('.Cart-Count')
 		const initialCartItemCount = await cartCountElement.getText()
 
 		await browser.url('http://localhost:3000/hw/store/catalog/6')
+		// await page.goto('http://localhost:3000/hw/store/catalog/6')
+
 		await addToCartButton.waitForExist()
 		await addToCartButton.click()
 
 		await browser.url('http://localhost:3000/hw/store/cart')
+		// await page.goto('http://localhost:3000/hw/store/cart')
+
 		const newCartItemCount = await cartCountElement.getText()
 
 		expect(parseInt(newCartItemCount)).toBeGreaterThan(
